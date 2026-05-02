@@ -4,8 +4,8 @@ Version: 0.1.0
 Summary: FastAPI backend for the portfolio management dashboard
 Requires-Python: >=3.12
 Requires-Dist: alembic
+Requires-Dist: bcrypt
 Requires-Dist: fastapi[standard]
-Requires-Dist: passlib[bcrypt]
 Requires-Dist: psycopg[binary]
 Requires-Dist: pydantic-settings
 Requires-Dist: python-jose[cryptography]

@@ -5,8 +5,8 @@ description = "FastAPI backend for the portfolio management dashboard"
 requires-python = ">=3.12"
 dependencies = [
     "alembic",
+    "bcrypt",
     "fastapi[standard]",
-    "passlib[bcrypt]",
     "psycopg[binary]",
     "pydantic-settings",
     "python-jose[cryptography]",

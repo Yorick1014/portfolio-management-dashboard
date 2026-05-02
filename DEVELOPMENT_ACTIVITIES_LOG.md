@@ -159,3 +159,20 @@ Use this file to capture what you did, why you did it, and what’s next.
 - **Notes / decisions**:
   - Trivial activity should not be logged, so the log remains focused on project-relevant decisions and outcomes.
 
+---
+
+### 2026-05-02 (Sat)
+
+- **Goal**: Implement backend username/password authentication.
+- **What I did**:
+  - Added registration, login, JWT issuing, JWT validation, and the protected `/api/me` endpoint.
+  - Added API tests for registration, duplicate usernames, login, current-user lookup, invalid credentials, and invalid tokens.
+  - Replaced `passlib[bcrypt]` with direct `bcrypt` usage after reproducing a Python 3.14 / bcrypt 5 compatibility failure in Passlib.
+  - Removed the committed default JWT secret so default tokens are not forgeable from repository contents.
+- **Result / output**:
+  - Backend tests pass with 14 tests.
+  - Ruff passes for the backend.
+- **Notes / decisions**:
+  - Usernames are normalized by trimming and lowercasing before storage and login.
+  - Password input is limited to 72 bytes to match bcrypt's hashing limit and avoid runtime hashing failures.
+

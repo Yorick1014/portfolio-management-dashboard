@@ -1,6 +1,6 @@
 alembic
+bcrypt
 fastapi[standard]
-passlib[bcrypt]
 psycopg[binary]
 pydantic-settings
 python-jose[cryptography]
