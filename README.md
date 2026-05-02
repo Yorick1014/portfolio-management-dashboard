@@ -37,24 +37,3 @@ To reset the database and reseed the demo data:
 docker compose down -v
 docker compose up --build
 ```
-
-## Local Development
-
-Run the backend locally:
-
-```bash
-cd backend
-python3 -m venv .venv
-.venv/bin/python -m pip install -e '.[dev]'
-.venv/bin/alembic upgrade head
-.venv/bin/python -m app.seed
-.venv/bin/fastapi dev app/main.py
-```
-
-Run the frontend locally:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
