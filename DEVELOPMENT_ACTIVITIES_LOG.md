@@ -191,3 +191,25 @@ Use this file to capture what you did, why you did it, and what’s next.
 - **Notes / decisions**:
   - The summary reuses average-cost investment calculations so dashboard metrics stay consistent with investment responses.
 
+---
+
+### 2026-05-02 (Sat)
+
+- **Goal**: Complete the frontend authentication flow and establish the trading-terminal UI direction.
+- **What I did**:
+  - Added React Router auth routes for login, registration, protected app pages, and redirects.
+  - Added a shared Axios API client with JWT attachment and simple token-backed auth state.
+  - Built the protected dashboard shell with sidebar navigation, logout, placeholder dashboard/investment/transaction pages, and a light/dark mode switch.
+  - Iterated the visual style toward a professional trading platform layout using compact panels, dense text hierarchy, orange navigation accents, and green/red financial metric colors.
+  - Added Vitest and Testing Library coverage for auth routing, protected layout behavior, full navigation labels, range controls, and the theme switch.
+- **Result / output**:
+  - Frontend tests pass with 4 tests.
+  - Frontend production build passes.
+  - Frontend lint passes.
+  - Marked the frontend auth/layout task complete in the implementation plan.
+- **Notes / decisions**:
+  - Finalized the style direction before building the data-heavy dashboard pages, so task 8 can reuse the terminal layout instead of restyling later.
+  - Kept dashboard, investments, and transactions as route placeholders for now because the detailed tables/forms belong to the next frontend pages task.
+- **Next**:
+  - Build the real dashboard, investments, and transaction pages against the existing backend APIs using this terminal-style shell.
+
