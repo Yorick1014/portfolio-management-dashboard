@@ -176,3 +176,18 @@ Use this file to capture what you did, why you did it, and what’s next.
   - Usernames are normalized by trimming and lowercasing before storage and login.
   - Password input is limited to 72 bytes to match bcrypt's hashing limit and avoid runtime hashing failures.
 
+---
+
+### 2026-05-02 (Sat)
+
+- **Goal**: Complete the backend dashboard summary API using transaction-ledger calculations.
+- **What I did**:
+  - Added `GET /api/dashboard/summary` with authenticated user scoping.
+  - Aggregated total current value, cost basis, gain/loss, performance percentage, and per-asset-type totals from calculated investment positions.
+  - Added endpoint tests that cover multi-asset totals, sell-adjusted quantities, current-user isolation, and empty portfolios.
+- **Result / output**:
+  - Backend tests pass with 24 tests.
+  - Ruff passes for the backend.
+- **Notes / decisions**:
+  - The summary reuses average-cost investment calculations so dashboard metrics stay consistent with investment responses.
+

@@ -2,7 +2,8 @@ from decimal import Decimal
 
 from sqlmodel import Session, select
 
-from app.models import Investment, Transaction, TransactionType
+from app.models import AssetType, Investment, Transaction, TransactionType, User
+from app.schemas.dashboard import AssetTypeSummary, DashboardSummary
 from app.schemas.investments import InvestmentRead
 
 MONEY_PLACES = Decimal("0.0001")
@@ -77,4 +78,68 @@ def build_investment_read(
         current_value=quantize_money(current_value),
         gain_loss=quantize_money(gain_loss),
         performance_percentage=quantize_money(performance_percentage),
+    )
+
+
+def build_dashboard_summary(
+    *,
+    current_user: User,
+    session: Session,
+) -> DashboardSummary:
+    investments = session.exec(
+        select(Investment)
+        .where(Investment.user_id == current_user.id)
+        .order_by(Investment.asset_type, Investment.symbol),
+    ).all()
+    investment_reads = [
+        build_investment_read(investment=investment, session=session)
+        for investment in investments
+    ]
+
+    total_current_value = sum(
+        (investment.current_value for investment in investment_reads),
+        Decimal("0"),
+    )
+    total_cost_basis = sum(
+        (investment.estimated_cost_basis for investment in investment_reads),
+        Decimal("0"),
+    )
+    total_gain_loss = total_current_value - total_cost_basis
+    total_performance_percentage = (
+        total_gain_loss / total_cost_basis * Decimal("100")
+        if total_cost_basis > 0
+        else Decimal("0")
+    )
+
+    asset_type_totals: dict[AssetType, dict[str, Decimal]] = {}
+    for investment in investment_reads:
+        totals = asset_type_totals.setdefault(
+            investment.asset_type,
+            {
+                "current_value": Decimal("0"),
+                "cost_basis": Decimal("0"),
+                "gain_loss": Decimal("0"),
+            },
+        )
+        totals["current_value"] += investment.current_value
+        totals["cost_basis"] += investment.estimated_cost_basis
+        totals["gain_loss"] += investment.gain_loss
+
+    return DashboardSummary(
+        total_current_value=quantize_money(total_current_value),
+        total_cost_basis=quantize_money(total_cost_basis),
+        total_gain_loss=quantize_money(total_gain_loss),
+        total_performance_percentage=quantize_money(total_performance_percentage),
+        asset_type_summary=[
+            AssetTypeSummary(
+                asset_type=asset_type,
+                current_value=quantize_money(totals["current_value"]),
+                cost_basis=quantize_money(totals["cost_basis"]),
+                gain_loss=quantize_money(totals["gain_loss"]),
+            )
+            for asset_type, totals in sorted(
+                asset_type_totals.items(),
+                key=lambda item: item[0].value,
+            )
+        ],
     )
