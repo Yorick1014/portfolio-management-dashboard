@@ -213,3 +213,21 @@ Use this file to capture what you did, why you did it, and what’s next.
 - **Next**:
   - Build the real dashboard, investments, and transaction pages against the existing backend APIs using this terminal-style shell.
 
+---
+
+### 2026-05-02 (Sat)
+
+- **Goal**: Replace frontend page placeholders with assessment-ready portfolio workflows.
+- **What I did**:
+  - Built API-backed dashboard summary cards and asset allocation from `/api/dashboard/summary`.
+  - Added holdings and transaction tables with create/edit forms, loading, empty, error, success, and delete-confirmation states.
+  - Added focused React tests for dashboard data, investment create/edit/delete, transaction create/delete, and sell-validation error display.
+- **Result / output**:
+  - Frontend tests pass with 9 tests.
+  - Frontend production build passes.
+  - Frontend lint passes.
+  - Marked the frontend pages task complete in the implementation plan.
+- **Notes / decisions**:
+  - Kept transaction quantity and investment cost fields derived from backend responses; edit investment only changes metadata/current price.
+  - Investment deletion explicitly warns that related transaction history will be removed.
+

@@ -1,6 +1,7 @@
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authState'
+import { getStoredTheme, getThemeStyle, themeStorageKey } from '../utils/theme'
 
 const navigationItems = [
   { label: 'Dashboard', to: '/dashboard' },
@@ -11,27 +12,10 @@ const navigationItems = [
 export function AppLayout() {
   const { logout, user } = useAuth()
   const navigate = useNavigate()
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => getStoredTheme())
   const isLightTheme = theme === 'light'
 
-  const themeStyle = useMemo(
-    () =>
-      ({
-        '--app-bg': isLightTheme ? '#F2F4F7' : '#0F1117',
-        '--panel-bg': isLightTheme ? '#FFFFFF' : '#151922',
-        '--panel-alt': isLightTheme ? '#F7F9FC' : '#11141B',
-        '--rail-bg': isLightTheme ? '#E8EDF5' : '#202735',
-        '--toolbar-bg': isLightTheme ? '#FFFFFF' : '#11141B',
-        '--border': isLightTheme ? '#D9DFEA' : '#2A303A',
-        '--border-soft': isLightTheme ? '#E5EAF2' : '#252B35',
-        '--text-primary': isLightTheme ? '#111827' : '#FFFFFF',
-        '--text-secondary': isLightTheme ? '#334155' : '#DDE3EA',
-        '--text-muted': isLightTheme ? '#64748B' : '#8E98A8',
-        '--text-subtle': isLightTheme ? '#94A3B8' : '#687284',
-        '--hover-bg': isLightTheme ? '#DDE5F0' : '#252D3A',
-      }) as CSSProperties,
-    [isLightTheme],
-  )
+  const themeStyle = useMemo(() => getThemeStyle(theme), [theme])
 
   function handleLogout() {
     logout()
@@ -39,7 +23,11 @@ export function AppLayout() {
   }
 
   function handleThemeToggle() {
-    setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))
+    setTheme((currentTheme) => {
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark'
+      localStorage.setItem(themeStorageKey, nextTheme)
+      return nextTheme
+    })
   }
 
   return (
@@ -95,8 +83,6 @@ export function AppLayout() {
             <span className="font-semibold text-(--text-primary)">
               Portfolio Management Dashboard
             </span>
-            <span className="h-4 w-px bg-(--border)" />
-            <span>Terminal View</span>
           </div>
           <div className="flex items-center gap-3">
             <ThemeSwitch

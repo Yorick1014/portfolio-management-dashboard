@@ -2,10 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authState'
 import { getErrorMessage } from '../utils/errorMessage'
+import { getStoredTheme, getThemeStyle } from '../utils/theme'
 
 export function RegisterPage() {
   const { register } = useAuth()
   const navigate = useNavigate()
+  const theme = getStoredTheme()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -37,15 +39,20 @@ export function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#0F1117] px-6 py-12">
-      <section className="w-full max-w-md rounded-[2px] border border-[#252B35] bg-[#151922] p-8">
+    <main
+      className="flex min-h-screen items-center justify-center bg-(--app-bg) px-6 py-12 text-(--text-secondary)"
+      data-testid="auth-shell"
+      data-theme={theme}
+      style={getThemeStyle(theme)}
+    >
+      <section className="w-full max-w-md rounded-[2px] border border-(--border-soft) bg-(--panel-bg) p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#FF7A1A]">
           Portfolio Dashboard
         </p>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-white">
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-(--text-primary)">
           Create your account
         </h1>
-        <p className="mt-2 text-sm text-[#8E98A8]">
+        <p className="mt-2 text-sm text-(--text-muted)">
           Register with a username and password to start tracking holdings.
         </p>
 
@@ -86,7 +93,7 @@ export function RegisterPage() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-sm text-[#8E98A8]">
+        <p className="mt-6 text-center text-sm text-(--text-muted)">
           Already registered?{' '}
           <Link className="font-semibold text-[#FF7A1A]" to="/login">
             Sign in
@@ -111,11 +118,11 @@ function FormField({
   value: string
 }) {
   return (
-    <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[#8E98A8]">
+    <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-(--text-muted)">
       {label}
       <input
         autoComplete={autoComplete}
-        className="mt-2 w-full rounded-[2px] bg-[#0F1117] px-4 py-3 text-white outline-none transition placeholder:text-[#687284] focus:ring-1 focus:ring-[#FF7A1A]"
+        className="mt-2 w-full rounded-[2px] bg-(--panel-alt) px-4 py-3 text-(--text-primary) outline-none transition placeholder:text-(--text-subtle) focus:ring-1 focus:ring-[#FF7A1A]"
         onChange={(event) => onChange(event.target.value)}
         required
         type={type}
