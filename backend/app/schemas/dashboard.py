@@ -1,8 +1,11 @@
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel
 
 from app.models import AssetType
+
+TrendPeriod = Literal["1D", "1M", "YTD", "ALL"]
 
 
 class AssetTypeSummary(BaseModel):
@@ -18,3 +21,14 @@ class DashboardSummary(BaseModel):
     total_gain_loss: Decimal
     total_performance_percentage: Decimal
     asset_type_summary: list[AssetTypeSummary]
+
+
+class DashboardTrendPoint(BaseModel):
+    date: str
+    value: Decimal
+    cost_basis: Decimal
+
+
+class DashboardTrend(BaseModel):
+    period: TrendPeriod
+    points: list[DashboardTrendPoint]

@@ -51,6 +51,7 @@ def create_investment(
     current_price: str,
     initial_quantity: str,
     initial_purchase_price: str,
+    transaction_date: str = "2026-05-01",
 ) -> str:
     response = client.post(
         "/api/investments",
@@ -62,7 +63,7 @@ def create_investment(
             "current_price": current_price,
             "initial_quantity": initial_quantity,
             "initial_purchase_price": initial_purchase_price,
-            "transaction_date": "2026-05-01",
+            "transaction_date": transaction_date,
         },
     )
     assert response.status_code == 201
@@ -157,3 +158,90 @@ def test_dashboard_summary_returns_empty_totals_for_user_without_investments(
         "total_performance_percentage": "0.0000",
         "asset_type_summary": [],
     }
+
+
+def test_dashboard_trend_filters_points_by_period_and_current_user_scope(
+    client: TestClient,
+) -> None:
+    first_headers = auth_headers(client, "first_user")
+    second_headers = auth_headers(client, "second_user")
+    stock_id = create_investment(
+        client,
+        first_headers,
+        name="Apple Inc.",
+        symbol="AAPL",
+        asset_type="STOCK",
+        current_price="200.00",
+        initial_quantity="10",
+        initial_purchase_price="100.00",
+        transaction_date="2026-01-15",
+    )
+    create_investment(
+        client,
+        second_headers,
+        name="Other Holding",
+        symbol="OTHR",
+        asset_type="STOCK",
+        current_price="999.00",
+        initial_quantity="99",
+        initial_purchase_price="99.00",
+        transaction_date="2026-05-01",
+    )
+    buy_response = client.post(
+        "/api/transactions",
+        headers=first_headers,
+        json={
+            "investment_id": stock_id,
+            "transaction_type": "BUY",
+            "quantity": "5",
+            "price": "120.00",
+            "transaction_date": "2026-04-20",
+        },
+    )
+    sell_response = client.post(
+        "/api/transactions",
+        headers=first_headers,
+        json={
+            "investment_id": stock_id,
+            "transaction_type": "SELL",
+            "quantity": "3",
+            "price": "180.00",
+            "transaction_date": "2026-05-01",
+        },
+    )
+    assert buy_response.status_code == 201
+    assert sell_response.status_code == 201
+
+    all_response = client.get("/api/dashboard/trend?period=ALL", headers=first_headers)
+    month_response = client.get("/api/dashboard/trend?period=1M", headers=first_headers)
+    day_response = client.get("/api/dashboard/trend?period=1D", headers=first_headers)
+
+    assert all_response.status_code == 200
+    assert month_response.status_code == 200
+    assert day_response.status_code == 200
+    assert all_response.json()["period"] == "ALL"
+    assert [point["date"] for point in all_response.json()["points"]] == [
+        "2026-01-15",
+        "2026-04-20",
+        "2026-05-01",
+    ]
+    assert [point["date"] for point in month_response.json()["points"]] == [
+        "2026-04-20",
+        "2026-05-01",
+    ]
+    assert [point["date"] for point in day_response.json()["points"]] == [
+        "2026-05-01",
+    ]
+    assert all_response.json()["points"][-1] == {
+        "date": "2026-05-01",
+        "value": "2400.0000",
+        "cost_basis": "1280.0000",
+    }
+
+
+def test_dashboard_trend_rejects_unknown_period(client: TestClient) -> None:
+    headers = auth_headers(client)
+
+    response = client.get("/api/dashboard/trend?period=BAD", headers=headers)
+
+    assert response.status_code == 422

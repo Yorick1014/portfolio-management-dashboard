@@ -1,7 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authState'
-import { getStoredTheme, getThemeStyle, themeStorageKey } from '../utils/theme'
+import {
+  applyDocumentTheme,
+  getStoredTheme,
+  getThemeStyle,
+  themeStorageKey,
+} from '../utils/theme'
 
 const navigationItems = [
   { label: 'Dashboard', to: '/dashboard' },
@@ -16,6 +21,10 @@ export function AppLayout() {
   const isLightTheme = theme === 'light'
 
   const themeStyle = useMemo(() => getThemeStyle(theme), [theme])
+
+  useEffect(() => {
+    applyDocumentTheme(theme)
+  }, [theme])
 
   function handleLogout() {
     logout()

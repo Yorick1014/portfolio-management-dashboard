@@ -27,3 +27,14 @@ export function getThemeStyle(theme: AppTheme) {
     '--hover-bg': isLightTheme ? '#DDE5F0' : '#252D3A',
   } as CSSProperties
 }
+
+export function applyDocumentTheme(theme: AppTheme) {
+  const themeStyle = getThemeStyle(theme) as Record<string, string>
+  const root = document.documentElement
+  Object.entries(themeStyle).forEach(([property, value]) => {
+    root.style.setProperty(property, value)
+  })
+  root.style.backgroundColor = themeStyle['--app-bg']
+  document.body.style.backgroundColor = themeStyle['--app-bg']
+  document.body.style.background = themeStyle['--app-bg']
+}

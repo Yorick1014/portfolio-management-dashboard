@@ -231,3 +231,36 @@ Use this file to capture what you did, why you did it, and what’s next.
   - Kept transaction quantity and investment cost fields derived from backend responses; edit investment only changes metadata/current price.
   - Investment deletion explicitly warns that related transaction history will be removed.
 
+---
+
+### 2026-05-02 (Sat)
+
+- **Goal**: Finish the delivery-polish task and validate the app as a Docker Compose demo.
+- **What I did**:
+  - Added idempotent backend demo seeding for `demo_user` with representative stock, bond, and mutual fund holdings.
+  - Updated Compose startup to apply Alembic migrations, seed demo data, and wait for backend health before serving the frontend.
+  - Expanded README run instructions with demo credentials, service URLs, API docs, and reset steps.
+- **Result / output**:
+  - Backend tests pass with 26 tests.
+  - Frontend lint, tests, and production build pass.
+  - Docker Compose rebuild/start succeeds; backend is healthy, frontend serves HTML, and demo login returns a bearer token.
+- **Notes / decisions**:
+  - Seed data is idempotent and does not duplicate transactions on repeated container starts.
+  - Compose now covers the fresh-reviewer path instead of requiring manual migration commands.
+
+---
+
+### 2026-05-02 (Sat)
+
+- **Goal**: Make the dashboard trend view more useful and fix the light-mode overscroll polish issue.
+- **What I did**:
+  - Added a period-aware `/api/dashboard/trend` endpoint with `1D`, `1M`, `YTD`, and `ALL` filters based on transaction-ledger history.
+  - Upgraded the dashboard trend chart with x/y axes, value/date labels, period buttons, and API-backed data.
+  - Added more recent demo transactions so short ranges have visible data, and moved theme colors onto the document background for consistent overscroll.
+- **Result / output**:
+  - Backend tests pass with 28 tests.
+  - Frontend lint, tests, and production build pass.
+  - Docker Compose rebuild/start succeeds; demo trend API returns period-filtered points.
+- **Notes / decisions**:
+  - Trend values use current investment prices against historical quantities, which keeps the assessment scope transaction-ledger based without introducing market-price history.
+

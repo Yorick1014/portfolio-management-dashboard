@@ -149,6 +149,12 @@ describe("App auth routing", () => {
     expect(
       screen.getAllByRole("switch", { name: /theme mode/i })[0],
     ).toHaveAttribute("aria-checked", "true");
+    expect(document.documentElement).toHaveStyle({
+      backgroundColor: "#F2F4F7",
+    });
+    expect(document.body).toHaveStyle({
+      backgroundColor: "#F2F4F7",
+    });
   });
 
   test("keeps the selected theme after logout and the next authenticated render", async () => {
@@ -177,22 +183,40 @@ describe("App auth routing", () => {
 
   test("loads dashboard summary metrics and asset allocation", async () => {
     localStorage.setItem("portfolio_token", "test-token");
-    apiClientMock.get.mockResolvedValueOnce({
-      data: {
-        total_current_value: "1500.00",
-        total_cost_basis: "1000.00",
-        total_gain_loss: "500.00",
-        total_performance_percentage: "50.00",
-        asset_type_summary: [
-          {
-            asset_type: "STOCK",
-            current_value: "1500.00",
-            cost_basis: "1000.00",
-            gain_loss: "500.00",
-          },
-        ],
-      },
-    });
+    apiClientMock.get
+      .mockResolvedValueOnce({
+        data: {
+          total_current_value: "1500.00",
+          total_cost_basis: "1000.00",
+          total_gain_loss: "500.00",
+          total_performance_percentage: "50.00",
+          asset_type_summary: [
+            {
+              asset_type: "STOCK",
+              current_value: "1500.00",
+              cost_basis: "1000.00",
+              gain_loss: "500.00",
+            },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          period: "ALL",
+          points: [
+            { cost_basis: "800.00", date: "2026-01-15", value: "900.00" },
+            { cost_basis: "1000.00", date: "2026-05-01", value: "1500.00" },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          period: "1M",
+          points: [
+            { cost_basis: "1000.00", date: "2026-05-01", value: "1500.00" },
+          ],
+        },
+      });
 
     render(<App />);
 
@@ -204,9 +228,34 @@ describe("App auth routing", () => {
     expect(
       screen.getByLabelText(/portfolio performance chart/i),
     ).toBeInTheDocument();
+    expect(screen.getByTestId("portfolio-trend-curve")).toBeInTheDocument();
+    expect(screen.getByText("$1.5K")).toBeInTheDocument();
+    expect(screen.getByText("Jan 15")).toBeInTheDocument();
+    expect(screen.getByText("May 01")).toBeInTheDocument();
+    expect(screen.queryByText("Y axis: portfolio value")).not.toBeInTheDocument();
+    expect(screen.queryByText("X axis: transaction date")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1D" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1M" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "YTD" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "ALL" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "1M" }));
+    expect(screen.getByRole("button", { name: "1M" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.queryByTestId("portfolio-trend-polyline")).not.toBeInTheDocument();
     expect(screen.queryByText(/chart placeholder/i)).not.toBeInTheDocument();
     expect(screen.getByText("Stocks")).toBeInTheDocument();
     expect(apiClientMock.get).toHaveBeenCalledWith("/dashboard/summary");
+    expect(apiClientMock.get).toHaveBeenCalledWith("/dashboard/trend", {
+      params: { period: "ALL" },
+    });
+    expect(apiClientMock.get).toHaveBeenCalledWith("/dashboard/trend", {
+      params: { period: "1M" },
+    });
   });
 
   test("creates and deletes investments with confirmation feedback", async () => {

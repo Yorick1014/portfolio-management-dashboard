@@ -1,8 +1,8 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/authState";
 import { getErrorMessage } from "../utils/errorMessage";
-import { getStoredTheme, getThemeStyle } from "../utils/theme";
+import { applyDocumentTheme, getStoredTheme, getThemeStyle } from "../utils/theme";
 
 type LocationState = {
   message?: string;
@@ -95,6 +95,10 @@ function AuthPageShell({
   title: string;
 }) {
   const theme = getStoredTheme();
+
+  useEffect(() => {
+    applyDocumentTheme(theme);
+  }, [theme]);
 
   return (
     <main

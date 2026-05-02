@@ -2,6 +2,7 @@ import { apiClient } from './client'
 
 export type AssetType = 'STOCK' | 'BOND' | 'MUTUAL_FUND'
 export type TransactionType = 'BUY' | 'SELL'
+export type TrendPeriod = '1D' | '1M' | 'YTD' | 'ALL'
 
 export type DashboardSummary = {
   total_current_value: string
@@ -9,6 +10,17 @@ export type DashboardSummary = {
   total_gain_loss: string
   total_performance_percentage: string
   asset_type_summary: AssetTypeSummary[]
+}
+
+export type DashboardTrendPoint = {
+  date: string
+  value: string
+  cost_basis: string
+}
+
+export type DashboardTrend = {
+  period: TrendPeriod
+  points: DashboardTrendPoint[]
 }
 
 export type AssetTypeSummary = {
@@ -76,6 +88,13 @@ export type TransactionUpdatePayload = {
 
 export async function getDashboardSummary() {
   const response = await apiClient.get<DashboardSummary>('/dashboard/summary')
+  return response.data
+}
+
+export async function getDashboardTrend(period: TrendPeriod) {
+  const response = await apiClient.get<DashboardTrend>('/dashboard/trend', {
+    params: { period },
+  })
   return response.data
 }
 

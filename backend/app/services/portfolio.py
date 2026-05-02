@@ -1,9 +1,17 @@
+from datetime import timedelta
 from decimal import Decimal
+from uuid import UUID
 
 from sqlmodel import Session, select
 
 from app.models import AssetType, Investment, Transaction, TransactionType, User
-from app.schemas.dashboard import AssetTypeSummary, DashboardSummary
+from app.schemas.dashboard import (
+    AssetTypeSummary,
+    DashboardSummary,
+    DashboardTrend,
+    DashboardTrendPoint,
+    TrendPeriod,
+)
 from app.schemas.investments import InvestmentRead
 
 MONEY_PLACES = Decimal("0.0001")
@@ -143,3 +151,84 @@ def build_dashboard_summary(
             )
         ],
     )
+
+
+def build_dashboard_trend(
+    *,
+    current_user: User,
+    period: TrendPeriod,
+    session: Session,
+) -> DashboardTrend:
+    investments = session.exec(
+        select(Investment).where(Investment.user_id == current_user.id),
+    ).all()
+    investment_lookup = {investment.id: investment for investment in investments}
+    transactions = session.exec(
+        select(Transaction)
+        .where(Transaction.user_id == current_user.id)
+        .order_by(Transaction.transaction_date, Transaction.created_at),
+    ).all()
+    if not transactions:
+        return DashboardTrend(period=period, points=[])
+
+    latest_date = max(transaction.transaction_date for transaction in transactions)
+    if period == "1D":
+        start_date = latest_date - timedelta(days=1)
+    elif period == "1M":
+        start_date = latest_date - timedelta(days=30)
+    elif period == "YTD":
+        start_date = latest_date.replace(month=1, day=1)
+    else:
+        start_date = min(transaction.transaction_date for transaction in transactions)
+
+    quantities: dict[UUID, Decimal] = {}
+    buy_quantities: dict[UUID, Decimal] = {}
+    buy_costs: dict[UUID, Decimal] = {}
+    trend_points: list[DashboardTrendPoint] = []
+
+    for index, transaction in enumerate(transactions):
+        investment_id = transaction.investment_id
+        quantities.setdefault(investment_id, Decimal("0"))
+        buy_quantities.setdefault(investment_id, Decimal("0"))
+        buy_costs.setdefault(investment_id, Decimal("0"))
+
+        if transaction.transaction_type == TransactionType.BUY:
+            quantities[investment_id] += transaction.quantity
+            buy_quantities[investment_id] += transaction.quantity
+            buy_costs[investment_id] += transaction.quantity * transaction.price
+        else:
+            quantities[investment_id] -= transaction.quantity
+
+        next_transaction = transactions[index + 1] if index + 1 < len(transactions) else None
+        if (
+            next_transaction is not None
+            and next_transaction.transaction_date == transaction.transaction_date
+        ):
+            continue
+
+        if transaction.transaction_date < start_date:
+            continue
+
+        current_value = Decimal("0")
+        cost_basis = Decimal("0")
+        for owned_investment_id, quantity in quantities.items():
+            investment = investment_lookup.get(owned_investment_id)
+            if investment is None:
+                continue
+            average_buy_price = (
+                buy_costs[owned_investment_id] / buy_quantities[owned_investment_id]
+                if buy_quantities[owned_investment_id] > 0
+                else Decimal("0")
+            )
+            current_value += quantity * investment.current_price
+            cost_basis += quantity * average_buy_price
+
+        trend_points.append(
+            DashboardTrendPoint(
+                date=transaction.transaction_date.isoformat(),
+                value=quantize_money(current_value),
+                cost_basis=quantize_money(cost_basis),
+            ),
+        )
+
+    return DashboardTrend(period=period, points=trend_points)

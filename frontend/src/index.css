@@ -8,7 +8,25 @@
     sans-serif;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #0f1117;
+}
+
 body {
   margin: 0;
-  background: #0f1117;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top left, rgb(255 122 26 / 10%), transparent 32rem),
+    #0f1117;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+::selection {
+  background: rgb(255 122 26 / 28%);
+  color: #ffffff;
 }

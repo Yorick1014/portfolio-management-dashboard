@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authState'
 import { getErrorMessage } from '../utils/errorMessage'
-import { getStoredTheme, getThemeStyle } from '../utils/theme'
+import { applyDocumentTheme, getStoredTheme, getThemeStyle } from '../utils/theme'
 
 export function RegisterPage() {
   const { register } = useAuth()
@@ -13,6 +13,10 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    applyDocumentTheme(theme)
+  }, [theme])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
