@@ -6,7 +6,7 @@ export const themeStorageKey = 'portfolio_theme'
 
 export function getStoredTheme(): AppTheme {
   const storedTheme = localStorage.getItem(themeStorageKey)
-  return storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark'
+  return storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'light'
 }
 
 export function getThemeStyle(theme: AppTheme) {

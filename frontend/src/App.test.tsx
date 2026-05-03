@@ -134,26 +134,26 @@ describe("App auth routing", () => {
     );
   });
 
-  test("theme toggle switches between dark and light modes", async () => {
+  test("theme toggle switches between light and dark modes", async () => {
     const user = userEvent.setup();
     localStorage.setItem("portfolio_token", "test-token");
 
     render(<App />);
 
     const appShell = await screen.findByTestId("app-shell");
-    expect(appShell).toHaveAttribute("data-theme", "dark");
+    expect(appShell).toHaveAttribute("data-theme", "light");
 
     await user.click(screen.getAllByRole("switch", { name: /theme mode/i })[0]);
 
-    expect(appShell).toHaveAttribute("data-theme", "light");
+    expect(appShell).toHaveAttribute("data-theme", "dark");
     expect(
       screen.getAllByRole("switch", { name: /theme mode/i })[0],
-    ).toHaveAttribute("aria-checked", "true");
+    ).toHaveAttribute("aria-checked", "false");
     expect(document.documentElement).toHaveStyle({
-      backgroundColor: "#F2F4F7",
+      backgroundColor: "#0F1117",
     });
     expect(document.body).toHaveStyle({
-      backgroundColor: "#F2F4F7",
+      backgroundColor: "#0F1117",
     });
   });
 
@@ -165,10 +165,10 @@ describe("App auth routing", () => {
 
     const appShell = await screen.findByTestId("app-shell");
     await user.click(screen.getAllByRole("switch", { name: /theme mode/i })[0]);
-    expect(appShell).toHaveAttribute("data-theme", "light");
+    expect(appShell).toHaveAttribute("data-theme", "dark");
 
     await user.click(screen.getByRole("button", { name: /logout/i }));
-    expect(localStorage.getItem("portfolio_theme")).toBe("light");
+    expect(localStorage.getItem("portfolio_theme")).toBe("dark");
 
     cleanup();
     localStorage.setItem("portfolio_token", "test-token");
@@ -177,7 +177,7 @@ describe("App auth routing", () => {
 
     expect(await screen.findByTestId("app-shell")).toHaveAttribute(
       "data-theme",
-      "light",
+      "dark",
     );
   });
 
@@ -234,7 +234,7 @@ describe("App auth routing", () => {
     expect(screen.getByText("May 01")).toBeInTheDocument();
     expect(screen.queryByText("Y axis: portfolio value")).not.toBeInTheDocument();
     expect(screen.queryByText("X axis: transaction date")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "1D" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "1D" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "1M" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "YTD" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "ALL" })).toHaveAttribute(
@@ -256,6 +256,62 @@ describe("App auth routing", () => {
     expect(apiClientMock.get).toHaveBeenCalledWith("/dashboard/trend", {
       params: { period: "1M" },
     });
+  });
+
+  test("keeps the portfolio trend chart mounted during period refresh", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("portfolio_token", "test-token");
+
+    let resolvePeriodRequest: ((value: { data: unknown }) => void) | undefined;
+    const pendingPeriodRequest = new Promise<{ data: unknown }>((resolve) => {
+      resolvePeriodRequest = resolve;
+    });
+
+    apiClientMock.get
+      .mockResolvedValueOnce({
+        data: {
+          total_current_value: "1500.00",
+          total_cost_basis: "1000.00",
+          total_gain_loss: "500.00",
+          total_performance_percentage: "50.00",
+          asset_type_summary: [],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          period: "ALL",
+          points: [
+            { cost_basis: "800.00", date: "2026-01-15", value: "900.00" },
+            { cost_basis: "1000.00", date: "2026-05-01", value: "1500.00" },
+          ],
+        },
+      })
+      .mockImplementationOnce(() => pendingPeriodRequest);
+
+    render(<App />);
+
+    expect(await screen.findByTestId("portfolio-trend-curve")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "1M" }));
+
+    expect(screen.getByTestId("portfolio-trend-curve")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1M" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    resolvePeriodRequest?.({
+      data: {
+        period: "1M",
+        points: [{ cost_basis: "1000.00", date: "2026-05-01", value: "1500.00" }],
+      },
+    });
+
+    await waitFor(() =>
+      expect(apiClientMock.get).toHaveBeenCalledWith("/dashboard/trend", {
+        params: { period: "1M" },
+      }),
+    );
   });
 
   test("creates and deletes investments with confirmation feedback", async () => {

@@ -31,7 +31,7 @@ const emptyTrend: DashboardTrend = {
   points: [],
 }
 
-const trendPeriods: TrendPeriod[] = ['1D', '1M', 'YTD', 'ALL']
+const trendPeriods: TrendPeriod[] = ['1M', 'YTD', 'ALL']
 
 function formatCurrency(value: string) {
   return new Intl.NumberFormat('en-US', {
@@ -341,13 +341,12 @@ export function DashboardPage() {
                   </div>
                 </div>
               </div>
-              {isTrendLoading ? (
-                <StatusPanel message="Loading portfolio trend..." />
-              ) : trendError ? (
-                <StatusPanel message={trendError} tone="error" />
-              ) : (
-                <PortfolioTrend summary={summary} trend={trend} />
-              )}
+              <PortfolioTrend
+                isLoading={isTrendLoading}
+                summary={summary}
+                trend={trend}
+                trendError={trendError}
+              />
             </div>
 
             <div className="rounded-[2px] border border-(--border-soft) bg-(--panel-bg)">
@@ -404,11 +403,15 @@ export function DashboardPage() {
 }
 
 function PortfolioTrend({
+  isLoading,
   summary,
   trend,
+  trendError,
 }: {
+  isLoading: boolean
   summary: DashboardSummary
   trend: DashboardTrend
+  trendError: string
 }) {
   const gainLoss = Number(summary.total_gain_loss)
   const points = trend.points.length
@@ -430,7 +433,7 @@ function PortfolioTrend({
   const firstPoint = trendPoints[0]
 
   return (
-    <div className="px-2 pb-2 pt-1 sm:px-3 sm:pb-3">
+    <div className="relative px-2 pb-2 pt-1 sm:px-3 sm:pb-3">
       <svg
         aria-label="Portfolio performance chart"
         className="h-80 w-full"
@@ -538,6 +541,18 @@ function PortfolioTrend({
           </text>
         ) : null}
       </svg>
+      {isLoading ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-(--panel-bg)/70">
+          <span className="rounded-[2px] border border-(--border-soft) bg-(--panel-bg) px-3 py-1 text-xs text-(--text-muted)">
+            Loading portfolio trend...
+          </span>
+        </div>
+      ) : null}
+      {trendError ? (
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 rounded-[2px] border border-[#E34855]/30 bg-[#E34855]/10 px-3 py-2 text-xs text-[#E34855]">
+          {trendError}
+        </div>
+      ) : null}
     </div>
   )
 }

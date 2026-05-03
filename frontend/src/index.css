@@ -30,3 +30,12 @@ body {
   background: rgb(255 122 26 / 28%);
   color: #ffffff;
 }
+
+[data-theme='dark'] input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 1;
+}
+
+[data-theme='light'] input[type='date']::-webkit-calendar-picker-indicator {
+  filter: none;
+}
